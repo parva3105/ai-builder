@@ -1,0 +1,66 @@
+openapi: 3.1.0
+info:
+  title: Project API
+  version: 0.1.0
+  description: >
+    Starter API contract for the project. This should be expanded by the
+    architect-planner and backend-builder workflows as the product becomes clearer.
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+tags:
+  - name: system
+    description: System and operational endpoints
+
+paths:
+  /health:
+    get:
+      tags:
+        - system
+      summary: Health check
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+        "500":
+          description: Service unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required:
+        - status
+        - service
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: api
+        version:
+          type: string
+          example: 0.1.0
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: internal_server_error
+        message:
+          type: string
+          example: Unexpected server error
