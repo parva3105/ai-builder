@@ -1,10 +1,10 @@
 # Product
 
 ## Working title
-Mod-Your-Application
+TailorFlow
 
 ## One-line summary
-An AI-powered job application platform that tailors resumes and cover letters from saved `.tex` and `.docx` files into polished, downloadable application-ready outputs.
+An AI-powered job application platform that stores master `.tex` and `.docx` resumes, tailors them to job descriptions, generates matching cover letters, and returns polished, downloadable outputs.
 
 ## Problem statement
 Students, early-career professionals, and active job seekers spend hours manually rewriting resumes and cover letters for every application. Existing tools are fragmented: some generate generic text, some break formatting, and most do not support real `.tex` or `.docx` resume workflows end-to-end. Users often copy-paste between ChatGPT, Overleaf, Word, and PDF converters, which is slow and error-prone. This product is worth building now because job applications are increasingly high-volume, AI-assisted, and ATS-driven, but users still need trustworthy, well-formatted, editable outputs they can actually submit.
@@ -68,6 +68,15 @@ Students, early-career professionals, and active job seekers spend hours manuall
 - The system should generate downloadable outputs with clear filenames such as `FirstName_LastName_Resume_CompanyName.pdf`.
 - The system should have a testable architecture and clear module boundaries.
 - The system should support local development using a documented setup.
+- LaTeX compilation should run in a sandboxed environment with controlled packages, timeouts, and safe error handling.
+
+## Primary v1 workflow
+1. User signs up and logs in
+2. User uploads one or more master resumes in `.tex` or `.docx`
+3. User pastes a job description
+4. User selects one action: tailor `.tex`, tailor `.docx`, or generate cover letter
+5. System processes the request and shows status
+6. User reviews and downloads the generated output
 
 ## Non-functional requirements
 - Strong typing where the language supports it
@@ -90,6 +99,9 @@ Students, early-career professionals, and active job seekers spend hours manuall
 - A user can sign up, upload at least one `.tex` or `.docx` resume, paste a JD, generate a tailored output, and download it successfully.
 - Generated documents are useful, editable, and preserve formatting well enough for real-world submission.
 - Failures in generation, parsing, or compilation are surfaced clearly without corrupting user data.
+
+## Editing model for v1
+Users will review generated outputs in the platform and download them, but rich in-browser editing is out of scope for v1.
 
 ## Open product questions
 - Should v1 support side-by-side review and diff of original versus tailored resume?
