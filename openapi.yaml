@@ -1,10 +1,11 @@
 openapi: 3.1.0
 info:
-  title: Project API
+  title: TailorFlow API
   version: 0.1.0
   description: >
-    Starter API contract for the project. This should be expanded by the
-    architect-planner and backend-builder workflows as the product becomes clearer.
+    AI-powered resume tailoring and cover letter generation API.
+    Manages user authentication, master resume storage, tailoring requests,
+    and downloadable output generation.
 
 servers:
   - url: http://localhost:8000
@@ -13,12 +14,262 @@ servers:
 tags:
   - name: system
     description: System and operational endpoints
+  - name: auth
+    description: Authentication and user management
+  - name: resumes
+    description: Master resume upload and management
+  - name: tailoring
+    description: Resume tailoring and cover letter generation
+  - name: outputs
+    description: Generated output retrieval and download
 
+# ─── Security ──────────────────────────────────────────────────
+security: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ── System ──────────────────────────────────────────────
+    HealthStatus:
+      type: object
+      required: [status, service]
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: tailorflow-api
+        version:
+          type: string
+          example: 0.1.0
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          example: internal_server_error
+        message:
+          type: string
+          example: Unexpected server error
+
+    # ── Auth ────────────────────────────────────────────────
+    RegisterRequest:
+      type: object
+      required: [email, password, full_name]
+      properties:
+        email:
+          type: string
+          format: email
+          example: jane@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: securepassword123
+        full_name:
+          type: string
+          example: Jane Doe
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: jane@example.com
+        password:
+          type: string
+          format: password
+          example: securepassword123
+
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+
+    TokenResponse:
+      type: object
+      required: [access_token, refresh_token, token_type]
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          example: bearer
+
+    AccessTokenResponse:
+      type: object
+      required: [access_token, token_type]
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: bearer
+
+    UserProfile:
+      type: object
+      required: [id, email, full_name, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    # ── Resumes ─────────────────────────────────────────────
+    ResumeItem:
+      type: object
+      required: [id, filename, format, display_name, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+          example: resume_v3.tex
+        format:
+          type: string
+          enum: [tex, docx]
+        display_name:
+          type: string
+          example: My LaTeX Resume
+        created_at:
+          type: string
+          format: date-time
+
+    ResumeListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResumeItem"
+
+    ResumeUploadResponse:
+      type: object
+      required: [id, filename, format, display_name, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        format:
+          type: string
+          enum: [tex, docx]
+        display_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    ResumeUpdateRequest:
+      type: object
+      properties:
+        display_name:
+          type: string
+          example: Updated Resume Name
+
+    # ── Tailoring ───────────────────────────────────────────
+    TailoringAction:
+      type: string
+      enum: [tailor_tex, tailor_docx, cover_letter]
+
+    CreateTailoringRequest:
+      type: object
+      required: [resume_id, job_description, action]
+      properties:
+        resume_id:
+          type: string
+          format: uuid
+        job_description:
+          type: string
+          minLength: 50
+          example: "We are looking for a software engineer with experience in..."
+        action:
+          $ref: "#/components/schemas/TailoringAction"
+
+    TailoringRequestStatus:
+      type: string
+      enum: [pending, processing, completed, failed]
+
+    TailoringRequestResponse:
+      type: object
+      required: [id, resume_id, action, status, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        resume_id:
+          type: string
+          format: uuid
+        action:
+          $ref: "#/components/schemas/TailoringAction"
+        status:
+          $ref: "#/components/schemas/TailoringRequestStatus"
+        error_message:
+          type: string
+          nullable: true
+        output_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    # ── Outputs ─────────────────────────────────────────────
+    OutputItem:
+      type: object
+      required: [id, request_id, filename, format, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        request_id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+          example: Jane_Doe_Resume_Google.pdf
+        format:
+          type: string
+          enum: [pdf, docx, txt]
+        created_at:
+          type: string
+          format: date-time
+
+# ─── Paths ─────────────────────────────────────────────────────
 paths:
+  # ── System ──────────────────────────────────────────────────
   /health:
     get:
-      tags:
-        - system
+      tags: [system]
       summary: Health check
       operationId: getHealth
       responses:
@@ -35,32 +286,380 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-components:
-  schemas:
-    HealthStatus:
-      type: object
-      required:
-        - status
-        - service
-      properties:
-        status:
-          type: string
-          example: ok
-        service:
-          type: string
-          example: api
-        version:
-          type: string
-          example: 0.1.0
+  # ── Auth ────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Register a new user
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
-    ErrorResponse:
-      type: object
-      required:
-        - error
-      properties:
-        error:
-          type: string
-          example: internal_server_error
-        message:
-          type: string
-          example: Unexpected server error
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Log in with email and password
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: Refresh access token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessTokenResponse"
+        "401":
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Get current user profile
+      operationId: getCurrentUser
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Resumes ─────────────────────────────────────────────────
+  /resumes/upload:
+    post:
+      tags: [resumes]
+      summary: Upload a master resume
+      operationId: uploadResume
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: ".tex or .docx file"
+                display_name:
+                  type: string
+                  description: Optional user-friendly label
+      responses:
+        "201":
+          description: Resume uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResumeUploadResponse"
+        "400":
+          description: Invalid file type or size
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /resumes:
+    get:
+      tags: [resumes]
+      summary: List user's master resumes
+      operationId: listResumes
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: List of resumes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResumeListResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /resumes/{resume_id}:
+    get:
+      tags: [resumes]
+      summary: Get a specific resume
+      operationId: getResume
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: resume_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Resume details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResumeItem"
+        "404":
+          description: Resume not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      tags: [resumes]
+      summary: Update resume metadata (e.g. display name)
+      operationId: updateResume
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: resume_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResumeUpdateRequest"
+      responses:
+        "200":
+          description: Resume updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResumeItem"
+        "404":
+          description: Resume not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      tags: [resumes]
+      summary: Delete a resume
+      operationId: deleteResume
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: resume_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Resume deleted
+        "404":
+          description: Resume not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Tailoring ───────────────────────────────────────────────
+  /tailoring/requests:
+    post:
+      tags: [tailoring]
+      summary: Create a tailoring request
+      operationId: createTailoringRequest
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTailoringRequest"
+      responses:
+        "201":
+          description: Tailoring request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TailoringRequestResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resume not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /tailoring/requests/{request_id}:
+    get:
+      tags: [tailoring]
+      summary: Get tailoring request status
+      operationId: getTailoringRequest
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Tailoring request details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TailoringRequestResponse"
+        "404":
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Outputs ─────────────────────────────────────────────────
+  /outputs/{output_id}:
+    get:
+      tags: [outputs]
+      summary: Get output metadata
+      operationId: getOutput
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: output_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Output details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OutputItem"
+        "404":
+          description: Output not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /outputs/{output_id}/download:
+    get:
+      tags: [outputs]
+      summary: Download generated output file
+      operationId: downloadOutput
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: output_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: File download
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                type: string
+                format: binary
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: Output not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

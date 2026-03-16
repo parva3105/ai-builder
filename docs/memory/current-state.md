@@ -1,63 +1,74 @@
 # Current State
 
-This file should always answer: what is true about the repository right now?
-
 ## Repository basics
-- Repo initialized: no
-- Remote connected: no
+- Repo initialized: yes (git present)
+- Remote connected: no (not yet pushed)
 - Default branch: main
-- First bootstrap completed: no
-- CI configured: no
+- M0 (bootstrap): complete
+- M1 (backend foundation): complete
+- M2 (frontend foundation): complete
+- CI configured: yes (`.github/workflows/ci.yml`)
 
 ## Current stack
-- Frontend: undecided
-- Backend: undecided
-- Database: undecided
-- Auth: undecided
-- API style: undecided
-- Testing stack: undecided
-- Infra baseline: undecided
+- Frontend: Next.js 14 + TypeScript (App Router)
+- Backend: FastAPI + Python 3.11
+- Database: PostgreSQL 16 (via Docker Compose)
+- Auth: JWT (access + refresh tokens) – bcrypt for password hashing
+- API style: REST + OpenAPI 3.1
+- File storage: local filesystem (dev), S3-compatible (prod – not yet built)
+- LLM: OpenAI GPT-4o
+- LaTeX: sandboxed pdflatex via Docker
+- Testing: pytest (backend), Jest/Vitest (frontend), Playwright (e2e)
+- Infra: Docker Compose (local), GitHub Actions (CI)
 
 ## Current top-level structure present
-- `.agents/`
-- `.specify/`
-- `docs/`
-- `PRODUCT.md`
-- `ARCHITECTURE.md`
-- `TASKS.md`
-- `README.md`
-- `openapi.yaml`
+- `.agents/` – rules and skills
+- `.specify/` – constitution
+- `.github/workflows/` – CI pipeline
+- `apps/api/` – FastAPI backend (models, auth, migrations configured)
+- `apps/web/` – Next.js frontend (shell, auth pages, dashboard)
+- `tests/backend/` – pytest (health + auth unit + auth integration)
+- `tests/e2e/` – Playwright placeholder
+- `docs/` – memory, runbooks, primer
+- `PRODUCT.md`, `ARCHITECTURE.md`, `TASKS.md`, `README.md`
+- `openapi.yaml` – v1 API contract (14 endpoints)
+- `docker-compose.yml` – db, api, web, latex services
+- `.env.example` – all required env vars
+- `.gitignore`
 
 ## What exists right now
-- rule files for agent behavior
-- skill files for agent workflows
-- memory files for continuity
-- initial product, architecture, and tasks templates
+- Full project scaffold (backend + frontend + tests + infra)
+- 4 ORM models: User, MasterResume, TailoringRequest, GeneratedOutput
+- Alembic configured for async migrations (`alembic.ini`, `app/db/migrations/`)
+- Auth endpoints: register, login, refresh, me (matching openapi.yaml)
+- JWT auth dependency (`api/deps.py`) for protected routes
+- Auth service with business logic separated from routes
+- Pydantic schemas for all auth request/response types
+- 29 passing tests (health smoke, auth service unit, auth endpoint integration)
+- Test infrastructure: SQLite in-memory + ASGI TestClient (no PostgreSQL needed)
+- Frontend: app shell, landing page, login/signup pages, protected dashboard
 
 ## What does not exist yet
-- app implementation structure
-- backend code
-- frontend code
-- tests
-- CI pipelines
-- docker baseline
-- environment/runtime baseline
+- Initial Alembic migration file (requires live PostgreSQL to run `alembic revision --autogenerate`)
+- Resume upload/management endpoints (M3)
+- Tailoring engine / LLM integration (M4)
+- Output generation / download endpoints (M5)
+- Frontend dashboard features (M3+)
+- Production file storage adapter (S3)
+- End-to-end tests
 
 ## Current branch
 - main
 
 ## Current priority
-- initialize git and connect GitHub
-- run first planning/bootstrap iteration
-- scaffold the actual application structure
+- M3: File management (resume upload, list, get, update, delete)
+- M4: Tailoring engine (LLM integration, request creation, status)
 
 ## Current blockers
-- product-specific details may still be incomplete
-- actual chosen stack may need confirmation
-- no generated app structure exists yet
+- Initial Alembic migration needs live PostgreSQL (`docker compose up -d db`)
+- OpenAI API key needed for M4
+- Docker required for LaTeX compilation tests
 
 ## Last completed milestone
-- control layer and memory layer created manually
-
-## Last update protocol
-If this file is stale, the responsible agent should update it before finishing their current task.
+- M1: Backend foundation (models, Alembic, auth endpoints, tests)
+- M2: Frontend foundation (app shell, auth pages, routing)

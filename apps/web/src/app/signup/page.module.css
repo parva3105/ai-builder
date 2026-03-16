@@ -1,0 +1,110 @@
+/* ── Auth pages (login & signup) ────────────────────────────── */
+
+.authPage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - var(--navbar-height));
+  padding: var(--space-6);
+  position: relative;
+  overflow: hidden;
+}
+
+.authBgOrb {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.authBgOrb:first-of-type {
+  background: var(--color-accent-primary);
+  top: -100px;
+  left: -100px;
+}
+
+.authBgOrb:last-of-type {
+  background: var(--color-accent-secondary);
+  bottom: -100px;
+  right: -100px;
+}
+
+.authCard {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+  padding: var(--space-10);
+  background: var(--color-bg-glass);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  animation: scaleIn 0.4s ease-out;
+}
+
+.authHeader {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+.authTitle {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.authSubtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.authError {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-error-bg);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  text-align: center;
+  animation: fadeInDown 0.3s ease-out;
+}
+
+.authFooter {
+  text-align: center;
+  margin-top: var(--space-6);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.authFooter a {
+  color: var(--color-accent-primary);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.authFooter a:hover {
+  color: var(--color-accent-primary-hover);
+}
+
+@media (max-width: 480px) {
+  .authCard {
+    padding: var(--space-6);
+  }
+
+  .authTitle {
+    font-size: var(--text-xl);
+  }
+}

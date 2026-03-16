@@ -1,156 +1,262 @@
 # Architecture
 
 ## Status
-This file is the living architecture document for the project.
-It starts as a structured placeholder and should be expanded and refined by the architect-planner skill as the project evolves.
+Expanded during M0 bootstrap (2026-03-15). This is the living architecture document for TailorFlow.
 
-## Current recommended baseline
-If the product does not explicitly require a different stack, the default baseline is:
+---
 
-- Frontend: Next.js + TypeScript
-- Backend: FastAPI + Python
-- Database: PostgreSQL
-- Background jobs: optional worker process if needed
-- Infra: Docker Compose locally, GitHub Actions for CI
-- API contract: OpenAPI-based REST
-- Testing: unit, integration, and e2e
+## Confirmed Stack
 
-## Architecture goals
-- Keep the initial architecture simple and modular.
-- Enable parallel development between backend, frontend, QA, and bugfix agents.
-- Make the repository easy to scaffold and extend.
-- Favor explicit contracts and predictable boundaries.
-- Avoid premature microservices unless the product clearly needs them.
+| Layer | Choice | Notes |
+|-------|--------|-------|
+| Frontend | Next.js 14 + TypeScript | App Router, `src/` directory layout |
+| Backend | FastAPI + Python 3.11 | Async, Pydantic v2 |
+| Database | PostgreSQL 16 | Async via SQLAlchemy + asyncpg |
+| Auth | JWT (access + refresh tokens) | python-jose, bcrypt via passlib |
+| File storage | Local filesystem (dev), S3-compatible (prod) | Uploads dir, per-user isolation |
+| LLM | OpenAI GPT-4o | Resume tailoring + cover letter generation |
+| LaTeX compilation | Sandboxed `pdflatex` via Docker | No shell escape, timeout, resource limits |
+| DOCX processing | python-docx | Direct .docx manipulation |
+| Infra | Docker Compose (local), GitHub Actions (CI) | Multi-stage Dockerfiles |
+| API style | REST + OpenAPI 3.1 | Contract-first, `openapi.yaml` |
+| Testing | pytest (backend), Jest/Vitest (frontend), Playwright (e2e) | CI integrated |
 
-## Proposed top-level structure
-- `apps/web/` for the frontend application
-- `apps/api/` for the backend API
-- `packages/` for reusable shared modules if needed
-- `tests/` for integration, e2e, fixtures, and smoke validation
-- `docs/` for reference material, runbooks, and memory
-- `.agents/` for rules and skills guiding agent behavior
+---
 
-## Expected system boundaries
-### Frontend
-Responsible for:
-- screens and routes
-- reusable UI components
-- state and client-side data flow
-- API integration
-- UX states such as loading, error, empty, success
+## Top-Level Structure
 
-### Backend
-Responsible for:
-- request routing
-- auth/session handling
-- business logic
-- persistence layer
-- input/output validation
-- API contract consistency
-- backend logs and operational safety
+```
+Project3/
+├── apps/
+│   ├── api/              # FastAPI backend
+│   │   ├── app/
+│   │   │   ├── api/      # Route handlers
+│   │   │   ├── core/     # Config, security, logging
+│   │   │   ├── db/       # Session, base, migrations
+│   │   │   ├── models/   # SQLAlchemy ORM models
+│   │   │   ├── schemas/  # Pydantic request/response
+│   │   │   ├── services/ # Business logic
+│   │   │   └── main.py   # FastAPI entry point
+│   │   ├── Dockerfile
+│   │   └── pyproject.toml
+│   └── web/              # Next.js frontend
+│       ├── src/
+│       │   ├── app/      # App Router pages
+│       │   ├── lib/      # API client, utilities
+│       │   └── ...
+│       ├── Dockerfile
+│       └── package.json
+├── tests/
+│   ├── backend/          # pytest tests
+│   └── e2e/              # Playwright tests
+├── docs/
+│   ├── memory/           # Agent memory layer
+│   └── runbooks/         # Operational guides
+├── .github/workflows/    # CI pipeline
+├── docker-compose.yml
+├── .env.example
+├── openapi.yaml
+├── PRODUCT.md
+├── ARCHITECTURE.md
+├── TASKS.md
+└── README.md
+```
 
-### Shared contracts
-Responsible for:
-- API definitions
-- shared types or schemas where appropriate
-- stable request/response expectations
+---
 
-### QA/Validation
-Responsible for:
-- linting
-- type checking
-- unit/integration/e2e strategy
-- CI quality gates
-- stability reporting
-- reproducible validation steps
+## System Boundaries
 
-## Expected module layering
-### Backend layering
-- `api/` for routes, request entry points, and dependencies
-- `schemas/` for request/response models
-- `services/` for business logic
-- `models/` for ORM or domain models
-- `db/` for session and migration handling
-- `core/` for configuration, auth helpers, logging, and shared internal utilities
+### Frontend (apps/web)
+- Screens and routes (App Router)
+- Reusable UI components
+- Client-side state and data flow
+- API integration via typed fetch wrapper (`src/lib/api.ts`)
+- UX states: loading, error, empty, success
 
-### Frontend layering
-- `app/` or routing layer for pages/routes
-- `components/` for reusable UI
-- `features/` for domain-specific modules
-- `hooks/` for reusable behavior
-- `lib/` for API clients and infrastructure helpers
-- `types/` for frontend-safe types
+### Backend (apps/api)
+- Request routing (FastAPI routers)
+- Auth/session handling (JWT)
+- Business logic (services layer)
+- Persistence (SQLAlchemy async)
+- Input/output validation (Pydantic schemas)
+- File processing (upload, parse, generate)
+- API contract consistency with `openapi.yaml`
 
-## Data model guidance
-The architect agent should refine the entities below based on the actual product.
+### LaTeX Sandbox
+- Isolated Docker container with TeXLive
+- Invoked on-demand by the API via `docker compose run --rm`
+- No shell escape, controlled packages, timeouts
+- Input: `.tex` file path; Output: compiled `.pdf` or error
 
-Minimum categories to define:
-- User
-- Session or auth state if applicable
-- Core domain entities for the product
-- Audit or operational metadata where needed
+---
 
-For each important entity, define:
-- name
-- fields
-- ownership
-- relationships
-- lifecycle
-- validation constraints
+## Domain Model
 
-## API guidance
-- Prefer clear REST endpoints to start.
-- Document request and response schemas.
-- Keep error responses explicit and structured.
-- Versioning is optional at first, but route structure should allow future evolution.
-- Update `openapi.yaml` whenever endpoint behavior changes.
+### User
+| Field | Type | Notes |
+|-------|------|-------|
+| id | UUID | Primary key |
+| email | string | Unique, validated |
+| password_hash | string | bcrypt |
+| full_name | string | Display name |
+| created_at | timestamp | Auto |
+| updated_at | timestamp | Auto |
 
-## Auth guidance
-- Use secure defaults.
-- Keep secrets in environment variables.
-- Decide early whether auth is required for v1.
-- If auth is present, document:
-  - session/token flow
-  - protected resources
-  - user identity boundaries
-  - permission model
+### MasterResume
+| Field | Type | Notes |
+|-------|------|-------|
+| id | UUID | Primary key |
+| user_id | UUID | FK → User, ownership isolation |
+| filename | string | Original upload name |
+| format | enum | `tex` or `docx` |
+| storage_path | string | File system path |
+| display_name | string | User-editable label |
+| created_at | timestamp | Auto |
 
-## Observability guidance
-Even for early versions:
-- log important failures
-- log startup success/failure
-- log request-level errors safely
-- avoid leaking secrets in logs
+### TailoringRequest
+| Field | Type | Notes |
+|-------|------|-------|
+| id | UUID | Primary key |
+| user_id | UUID | FK → User |
+| resume_id | UUID | FK → MasterResume |
+| job_description | text | Pasted by user |
+| action | enum | `tailor_tex`, `tailor_docx`, `cover_letter` |
+| status | enum | `pending`, `processing`, `completed`, `failed` |
+| error_message | string | nullable, set on failure |
+| created_at | timestamp | Auto |
+| completed_at | timestamp | nullable |
 
-## Performance guidance
-- Avoid premature optimization.
-- Prioritize clarity and correctness first.
-- Identify only obviously hot paths.
-- Make the architecture compatible with later caching, async jobs, or queue-based work if the product needs it.
+### GeneratedOutput
+| Field | Type | Notes |
+|-------|------|-------|
+| id | UUID | Primary key |
+| request_id | UUID | FK → TailoringRequest |
+| user_id | UUID | FK → User, redundant for quick access |
+| filename | string | e.g. `John_Doe_Resume_Google.pdf` |
+| format | enum | `pdf`, `docx`, `txt` |
+| storage_path | string | File system path |
+| created_at | timestamp | Auto |
 
-## Security guidance
-- never hardcode secrets
-- validate inputs
-- restrict privileged operations
-- keep configuration explicit
-- document security-sensitive decisions
+### Entity Relationships
+```
+User 1──* MasterResume
+User 1──* TailoringRequest
+MasterResume 1──* TailoringRequest
+TailoringRequest 1──0..1 GeneratedOutput
+User 1──* GeneratedOutput
+```
 
-## Deployment guidance
-Initial deployment should be straightforward:
-- containerized apps
-- environment-based configuration
-- CI checks before merge
-- documented local setup
-- simple release path
+---
 
-## Architecture decisions log
-Major decisions should also be reflected in:
-- `docs/memory/decisions.md`
-- `docs/memory/current-state.md`
-- ADR-style notes if the project grows
+## Auth Strategy
 
-## Known gaps
-- Final domain model not yet defined
-- Final endpoint list not yet defined
-- Final auth strategy not yet chosen
-- Final deployment target not yet chosen
+### Flow
+1. **Register**: `POST /auth/register` → creates user, returns access + refresh tokens
+2. **Login**: `POST /auth/login` → validates credentials, returns tokens
+3. **Refresh**: `POST /auth/refresh` → validates refresh token, returns new access token
+4. **Protected routes**: require `Authorization: Bearer <access_token>` header
+
+### Token Details
+- Access token: 30-minute expiry, contains `sub` (user ID), `type: access`
+- Refresh token: 7-day expiry, contains `sub` (user ID), `type: refresh`
+- Algorithm: HS256
+- Secret: loaded from `JWT_SECRET_KEY` env var
+
+### User Isolation
+- All data queries are scoped by `user_id` from the JWT
+- No cross-user access to resumes, requests, or outputs
+- File storage paths include user ID for filesystem isolation
+
+---
+
+## File Storage Strategy
+
+### Development
+- Local filesystem under `./uploads/`
+- Directory structure: `uploads/{user_id}/resumes/` and `uploads/{user_id}/outputs/`
+
+### Production
+- S3-compatible object storage (e.g., AWS S3, MinIO, Cloudflare R2)
+- Same logical path structure
+- Storage layer abstracted behind a service interface for easy swap
+
+### Upload Constraints
+- Max file size: 10 MB (configurable via `MAX_UPLOAD_SIZE_MB`)
+- Allowed formats: `.tex`, `.docx`
+- File type validated server-side (not just extension)
+
+---
+
+## LaTeX Compilation Strategy
+
+### Sandbox Approach
+- Uses a dedicated TeXLive Docker container (no packages installed on the API server)
+- API writes the `.tex` file to a shared volume, invokes compilation, reads the result
+
+### Safety Controls
+- **No shell escape**: `pdflatex` invoked without `-shell-escape`
+- **Timeout**: configurable via `LATEX_COMPILE_TIMEOUT_SECONDS` (default 60s)
+- **Resource limits**: Docker container runs with CPU and memory limits
+- **Isolated workspace**: each compilation uses a unique temp directory
+- **Error handling**: compilation errors are captured and returned to the user as structured feedback
+
+---
+
+## LLM Integration Pattern
+
+### Provider
+- OpenAI API (GPT-4o by default, configurable via `OPENAI_MODEL`)
+
+### Tailoring Flow
+1. API reads the master resume content (`.tex` source or `.docx` extracted text)
+2. Constructs a prompt with the resume content + job description + action type
+3. Sends to OpenAI API
+4. Parses the response and writes the tailored output
+5. For `.tex`: compiles via LaTeX sandbox → PDF
+6. For `.docx`: writes modified content back to a `.docx` file
+7. For cover letter: generates a `.docx` or `.txt` file
+
+### Prompt Engineering
+- System prompt defines the tailoring objective and constraints
+- User prompt provides the resume content and job description
+- Output format is specified per action type
+- Structure preservation is emphasized in prompts
+
+---
+
+## Observability
+
+- Log important failures (auth, uploads, LLM calls, LaTeX compilation)
+- Log startup success/failure
+- Log request-level errors safely (no secrets in logs)
+- Structured logging via Python's logging module
+
+---
+
+## Performance Guidance
+
+- No premature optimization
+- LLM calls and LaTeX compilation are the known slow paths
+- Architecture supports future async job queue if needed (e.g., Celery/Redis)
+- File I/O is contained in the services layer for easy caching later
+
+---
+
+## Security Guidance
+
+- Never hardcode secrets
+- Validate inputs at all boundaries
+- Restrict privileged operations to authenticated users
+- Keep configuration explicit via `.env`
+- Uploaded files are validated for type and size
+- LaTeX compilation is sandboxed
+- Generated filenames are sanitized
+
+---
+
+## Known Gaps (to be addressed in future milestones)
+- Alembic migrations not yet configured
+- Background job queue not yet needed
+- Rate limiting not yet implemented
+- S3 storage adapter not yet built
+- Monitoring/alerting not yet configured
