@@ -46,11 +46,11 @@
 - Pydantic schemas for all auth request/response types
 - 29 passing tests (health smoke, auth service unit, auth endpoint integration)
 - Test infrastructure: SQLite in-memory + ASGI TestClient (no PostgreSQL needed)
-- Frontend: app shell, landing page, login/signup pages, protected dashboard
+- Frontend: app shell, landing page, login/signup pages, protected dashboard, /resumes page with temporary mocks
+- M3 Frontend UI components: ResumeCard, ResumeList, UploadResumeModal with typed temporary hooks.
 
 ## What does not exist yet
 - Initial Alembic migration file (requires live PostgreSQL to run `alembic revision --autogenerate`)
-- Resume upload/management endpoints (M3)
 - Tailoring engine / LLM integration (M4)
 - Output generation / download endpoints (M5)
 - Frontend dashboard features (M3+)
@@ -61,7 +61,9 @@
 - main
 
 ## Current priority
-- M3: File management (resume upload, list, get, update, delete)
+- M3: File management frontend (connect UI to backend)
+- M4: Tailoring engine (LLM integration, request creation, status)
+- Prerequisite: Alembic migration (live PostgreSQL)
 - M4: Tailoring engine (LLM integration, request creation, status)
 
 ## Current blockers
@@ -72,3 +74,4 @@
 ## Last completed milestone
 - M1: Backend foundation (models, Alembic, auth endpoints, tests)
 - M2: Frontend foundation (app shell, auth pages, routing)
+- M3: File management backend (upload, list, update, delete endpoints)

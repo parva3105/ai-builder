@@ -149,7 +149,7 @@ components:
           example: resume_v3.tex
         format:
           type: string
-          enum: [tex, docx]
+          enum: [tex, docx, pdf]
         display_name:
           type: string
           example: My LaTeX Resume
@@ -177,7 +177,7 @@ components:
           type: string
         format:
           type: string
-          enum: [tex, docx]
+          enum: [tex, docx, pdf]
         display_name:
           type: string
         created_at:
@@ -408,7 +408,7 @@ paths:
                 file:
                   type: string
                   format: binary
-                  description: ".tex or .docx file"
+                  description: ".tex, .docx, or .pdf file"
                 display_name:
                   type: string
                   description: Optional user-friendly label

@@ -18,6 +18,9 @@ This file records unresolved issues, ambiguities, and blockers.
 - Will PR creation be done via GitHub CLI, or through an external tool?
 - Are there required hosting/deployment targets from day one?
 
+## Agent Blockers
+- When will the user ensure Docker Desktop is running so the initial Alembic migration can be applied? (Deferred from Iteration 006).
+
 ## Resolved
 - ~~What product is being built?~~ → TailorFlow (PRODUCT.md)
 - ~~Is auth required in v1?~~ → Yes, JWT

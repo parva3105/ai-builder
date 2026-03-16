@@ -98,6 +98,16 @@ export const api = {
         method: "DELETE",
         headers: authHeaders(token),
       }),
+
+    update: (token: string, id: string, displayName: string) =>
+      apiFetch<{ id: string; filename: string; format: string; display_name: string; created_at: string }>(
+        `/resumes/${id}`,
+        {
+          method: "PATCH",
+          headers: authHeaders(token),
+          body: JSON.stringify({ display_name: displayName }),
+        }
+      ),
   },
 
   /** Tailoring */

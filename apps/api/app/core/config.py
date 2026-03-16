@@ -7,10 +7,10 @@ class Settings(BaseSettings):
     """Central settings object – populated from env vars / .env file."""
 
     # ── Database ─────────────────────────────────────────────
-    database_url: str = "postgresql+asyncpg://tailorflow:tailorflow@localhost:5432/tailorflow"
+    database_url: str = "postgresql+asyncpg://tailorflow:tailorflow@localhost:5433/tailorflow"
 
     # ── Auth / JWT ───────────────────────────────────────────
-    jwt_secret_key: str = "change-me-to-a-random-secret"
+    jwt_secret_key: str = ""
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
@@ -37,7 +37,7 @@ class Settings(BaseSettings):
         """Parse comma-separated CORS origins into a list."""
         return [origin.strip() for origin in self.cors_origins.split(",")]
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_file": ["../../.env", ".env"], "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()

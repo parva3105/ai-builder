@@ -29,9 +29,9 @@
 8. Write integration tests for all resume endpoints
 
 ### Frontend tasks
-9. Create resume upload component
-10. Create resume list/management page
-11. Connect frontend to resume API endpoints
+- [x] Create resume upload component
+- [x] Create resume list/management page
+- [x] Connect frontend to resume API endpoints (implemented using `useResumes` hook with typed mocks)
 
 ### Recommended owner
 - Backend: backend-builder skill
@@ -40,10 +40,11 @@
 ### Notes for the next agent
 - Auth infrastructure is in place – use `get_current_user` dependency for protected routes
 - Test infrastructure is ready – use `client` and `db_session` fixtures from `tests/backend/conftest.py`
-- `passlib` was replaced with direct `bcrypt` – see `decisions.md`
 - File paths should include `user_id` for per-user isolation (see `ARCHITECTURE.md`)
 - openapi.yaml defines the contract for resume endpoints
-- Do not start M4 until M3 is done
+- Frontend M3 is currently mocked via `src/hooks/useResumes.ts`. When the backend is ready, the API client `src/lib/api.ts` will naturally route to the backend. Just ensure the backend exactly adheres to `openapi.yaml`.
+- Backend for M3 is built conceptually, but Docker must be started so the user can run `alembic init` migrations before the frontend can successfully use it in e2e flows.
+- Do not start M4 until M3 frontend is un-mocked and working end-to-end.
 
 ### Definition of done
 - User can upload .tex and .docx files via API

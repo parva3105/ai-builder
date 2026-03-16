@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import styles from "./page.module.css";
@@ -21,15 +22,14 @@ function DashboardContent() {
       </div>
 
       <div className={styles.cardGrid}>
-        <div className={styles.card}>
+        <Link href="/resumes" className={styles.card} style={{ textDecoration: 'none', color: 'inherit' }}>
           <div className={styles.cardIcon}>📄</div>
           <h2 className={styles.cardTitle}>My Resumes</h2>
           <p className={styles.cardDescription}>
-            Upload and manage your master resumes in LaTeX or DOCX format.
+            Upload and manage your master resumes in LaTeX, DOCX, or PDF format.
             Keep multiple versions for different roles.
           </p>
-          <span className={styles.cardBadge}>Coming in M3</span>
-        </div>
+        </Link>
 
         <div className={styles.card}>
           <div className={styles.cardIcon}>🎯</div>

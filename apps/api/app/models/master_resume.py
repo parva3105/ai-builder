@@ -16,6 +16,7 @@ class ResumeFormat(str, enum.Enum):
 
     TEX = "tex"
     DOCX = "docx"
+    PDF = "pdf"
 
 
 class MasterResume(Base):
